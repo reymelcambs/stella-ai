@@ -1,0 +1,60 @@
+{
+  "subjects": {
+    "Physics": {
+      "Topic 1: Measurement and Dimensions of Physical Quantities": {
+        "competency": "Uses a variety of instruments to accurately measure physical quantities and applies the concept of dimensions to establish relations between quantities.",
+        "outcomes": [
+          "a) Measure a variety of physical quantities with minimal errors",
+          "b) Analyse dimensions of derived quantities and use them to check consistency of equations"
+        ]
+      },
+      "Topic 2: Statics": {
+        "competency": "Investigates the effect of forces on a system and how centre of gravity relates to the stability of mechanical structures.",
+        "outcomes": [
+          "a) Determine the resultant of vectors in different situations",
+          "b) Appreciate concepts of moments and torque in construction of structures"
+        ]
+      }
+    },
+    "Economics": {
+      "Topic 1: Introduction to Economics": {
+        "competency": "The learner analyses fundamental economic concepts and principles to make informed decisions about the use of scarce resources for personal and national development.",
+        "outcomes": [
+          "a) Analyse the basic economic problem of scarcity, choice and opportunity cost in real-life situations",
+          "b) Evaluate different economic systems and their implications for resource allocation",
+          "c) Apply the concept of the production possibility frontier to real-life trade-off decisions",
+          "d) Analyse economic data and statistics using appropriate tools to inform decisions"
+        ]
+      },
+      "Topic 2: Price Theory": {
+        "competency": "The learner analyses market behaviour and price determination mechanisms to evaluate how individuals, businesses and governments make resource allocation decisions.",
+        "outcomes": [
+          "a) Analyse the theory of demand and factors that influence demand in real markets",
+          "b) Analyse the theory of supply and factors that influence supply in real markets",
+          "c) Apply the concept of market equilibrium to explain price determination",
+          "d) Evaluate elasticity of demand and supply and their implications for business and government policy",
+          "e) Assess price mechanism and price control policies and their effects on markets",
+          "f) Analyse causes and effects of price fluctuations in commodity markets"
+        ]
+      },
+      "Topic 3: Production and Market Structures": {
+        "competency": "The learner evaluates production processes and market structures to assess how firms make decisions about output, pricing and competition in real-world contexts.",
+        "outcomes": [
+          "a) Analyse factors of production and their role in determining output and costs",
+          "b) Evaluate different market structures (perfect competition, monopoly, oligopoly, monopolistic competition) and their implications for consumers and producers",
+          "c) Assess pricing strategies used by firms under different market conditions"
+        ]
+      }
+    },
+    "Subsidiary ICT": {
+      "Topic 1: Introduction to ICT": {
+        "competency": "The learner operates a variety of ICTs to perform tasks in day-to-day life.",
+        "outcomes": [
+          "a) Identify and explain how ICT tools are used in different fields of life",
+          "b) Operate basic ICT devices safely and responsibly in everyday contexts",
+          "c) Appreciate the social, ethical and legal issues related to ICT use"
+        ]
+      }
+    }
+  }
+}

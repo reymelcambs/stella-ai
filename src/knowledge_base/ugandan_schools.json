@@ -1,0 +1,103 @@
+{
+  "districts": [
+    "Kampala",
+    "Wakiso",
+    "Mukono",
+    "Jinja",
+    "Mbarara",
+    "Masaka",
+    "Tororo",
+    "Gulu",
+    "Lira",
+    "Arua",
+    "Kabale",
+    "Bushenyi",
+    "Butambala",
+    "Luweero",
+    "Mbale",
+    "Fort Portal",
+    "Hoima",
+    "Mityana",
+    "Iganga"
+  ],
+  "schools": [
+    { "name": "Kawempe Muslim Secondary School", "district": "Kampala" },
+    { "name": "Kibuli Secondary School", "district": "Kampala" },
+    { "name": "Makerere College School", "district": "Kampala" },
+    { "name": "Mengo Senior School", "district": "Kampala" },
+    { "name": "Lubiri Secondary School", "district": "Kampala" },
+    { "name": "Nabisunsa Girls' Secondary School", "district": "Kampala" },
+    { "name": "Uganda Martyrs High School Lubaga", "district": "Kampala" },
+    { "name": "Kyambogo College School", "district": "Kampala" },
+    { "name": "Old Kampala Secondary School", "district": "Kampala" },
+    { "name": "Kololo Senior Secondary School", "district": "Kampala" },
+    { "name": "Makerere High School", "district": "Kampala" },
+    
+    { "name": "King's College Budo", "district": "Wakiso" },
+    { "name": "St. Mary's College Kisubi", "district": "Wakiso" },
+    { "name": "Gayaza High School", "district": "Wakiso" },
+    { "name": "Trinity College Nabbingo", "district": "Wakiso" },
+    { "name": "St. Mary's Secondary School, Kitende", "district": "Wakiso" },
+    { "name": "Uganda Martyrs Secondary School, Namugongo", "district": "Wakiso" },
+    { "name": "Vienna College Namugongo", "district": "Wakiso" },
+    { "name": "Greenhill Academy", "district": "Wakiso" },
+    { "name": "Buddo Secondary School", "district": "Wakiso" },
+    { "name": "Elite High School Entebbe", "district": "Wakiso" },
+    { "name": "Naalya Secondary School Bweyogerere", "district": "Wakiso" },
+    { "name": "Naalya Secondary School Namugongo", "district": "Wakiso" },
+    { "name": "St. Joseph's Secondary School, Wakiso", "district": "Wakiso" },
+    { "name": "Standard High School Zzana", "district": "Wakiso" },
+    
+    { "name": "Mt. St. Mary's College, Namagunga", "district": "Mukono" },
+    { "name": "Seeta High School (Main Campus)", "district": "Mukono" },
+    { "name": "Seeta High School (Mbalala)", "district": "Mukono" },
+    { "name": "Seeta High School (Green Campus)", "district": "Mukono" },
+    { "name": "Namilyango College", "district": "Mukono" },
+    { "name": "Seroma Christian High School", "district": "Mukono" },
+    { "name": "Mukono High School", "district": "Mukono" },
+    { "name": "St. Joseph's Girls' School, Seeta", "district": "Mukono" },
+    
+    { "name": "Busoga College Mwiri", "district": "Jinja" },
+    { "name": "Jinja College", "district": "Jinja" },
+    { "name": "Wanyange Girls' Secondary School", "district": "Jinja" },
+    { "name": "Kiira College Butiki", "district": "Jinja" },
+    { "name": "Holy Cross Lake View Secondary School", "district": "Jinja" },
+    { "name": "PMM Girls' School", "district": "Jinja" },
+    
+    { "name": "Ntare School", "district": "Mbarara" },
+    { "name": "Mbarara High School", "district": "Mbarara" },
+    { "name": "Maryhill High School", "district": "Mbarara" },
+    { "name": "Bweranyangi Girls' Secondary School", "district": "Bushenyi" },
+    { "name": "Valley College, Bushenyi", "district": "Bushenyi" },
+    
+    { "name": "St. Henry's College Kitovu", "district": "Masaka" },
+    { "name": "Masaka Secondary School", "district": "Masaka" },
+    { "name": "St. Mary's College, Masaka", "district": "Masaka" },
+    
+    { "name": "Tororo Girls' School", "district": "Tororo" },
+    { "name": "St. Peter's College, Tororo", "district": "Tororo" },
+    
+    { "name": "Sacred Heart Secondary School, Gulu", "district": "Gulu" },
+    { "name": "St. Joseph's College Layibi", "district": "Gulu" },
+    { "name": "Gulu High School", "district": "Gulu" },
+    
+    { "name": "Dr. Obote College, Boroboro", "district": "Lira" },
+    { "name": "Lira Town College", "district": "Lira" },
+    
+    { "name": "Mvara Secondary School", "district": "Arua" },
+    { "name": "St. Joseph's College, Ombaci", "district": "Arua" },
+    
+    { "name": "Kigezi High School", "district": "Kabale" },
+    { "name": "St. Mary's College, Rushoroza", "district": "Kabale" },
+    
+    { "name": "Gombe Secondary School", "district": "Butambala" },
+    
+    { "name": "Ndejje Secondary School", "district": "Luweero" },
+    
+    { "name": "Mbale Secondary School", "district": "Mbale" },
+    { "name": "Nyakasura School", "district": "Fort Portal" },
+    { "name": "Kabasanja Adventist Secondary School", "district": "Hoima" },
+    { "name": "Mityana Old Secondary School", "district": "Mityana" },
+    { "name": "Iganga Girls' Secondary School", "district": "Iganga" }
+  ]
+}

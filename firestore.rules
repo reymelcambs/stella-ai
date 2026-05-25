@@ -1,0 +1,197 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (request.auth.uid)
+    // Fields: uid, email, subjects, coverage, level, createdAt, updatedAt, onboarded
+    //
+    // Collection: questions
+    // Document ID: questionId
+    // Fields: id, userId, subject, topics, questionText, scenarioData, markingScheme, createdAt, type
+    //
+    // Collection: answers
+    // Document ID: answerId
+    // Fields: userId, questionId, answerText, voiceTranscript, feedback, score, isCorrect, timestamp
+    //
+    // Collection: analytics
+    // Document ID: userId (request.auth.uid)
+    // Fields: userId, topicPerformance, timeSpent, mistakesFrequency
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((request.auth.token.email == "dukehimself007@gmail.com" || request.auth.token.email == "dukehim007@gmail.com" || request.auth.token.email == "sigmascty@gmail.com") && request.auth.token.email_verified == true);
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidEmail(email) {
+      return email is string && email.size() <= 256 && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             (data.email == null || isValidEmail(data.email)) &&
+             data.subjects is list && data.subjects.size() <= 10 &&
+             data.level in ['S4', 'S5', 'S6'] &&
+             data.createdAt is number &&
+             data.onboarded is bool;
+    }
+
+    function isValidQuestion(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.userId == request.auth.uid &&
+             data.subject is string && data.subject.size() <= 100 &&
+             data.topics is list && data.topics.size() <= 20 &&
+             data.questionText is string && data.questionText.size() <= 10000 &&
+             data.difficulty in ['Standard', 'Advanced', 'Expert'] &&
+             data.createdAt is number &&
+             data.type in ['generated', 'uploaded'];
+    }
+
+    function isValidAnswer(data) {
+      return data.userId == request.auth.uid &&
+             data.questionId is string && data.questionId.size() <= 64 &&
+             data.answerText is string && data.answerText.size() <= 10000 &&
+             data.feedback is string && data.feedback.size() <= 10000 &&
+             data.score is number && data.score >= 0 && data.score <= 100 &&
+             data.isCorrect is bool &&
+             data.timestamp is number;
+    }
+
+    function isValidExam(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.userId == request.auth.uid &&
+             data.subject is string &&
+             data.topics is list && data.topics.size() <= 50 &&
+             data.questions is list && data.questions.size() <= 50 &&
+             data.answers is map &&
+             data.results is list &&
+             data.totalScore is number && data.totalScore >= 0 && data.totalScore <= 100 &&
+             data.startTime is number &&
+             data.endTime is number;
+    }
+
+    function isValidAnalytics(data) {
+      return data.userId == request.auth.uid &&
+             data.topicPerformance is map &&
+             data.conceptMastery is map &&
+             data.timeSpent is number &&
+             data.mistakesFrequency is map;
+    }
+
+    function isValidChat(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             data.messages is list && data.messages.size() <= 500 &&
+             data.createdAt is number &&
+             data.updatedAt is number;
+    }
+
+    function isValidTopicMastery(data) {
+      return data.topic is string && data.topic.size() <= 200 &&
+             data.subject is string && data.subject.size() <= 100 &&
+             data.scorePercentages is list && data.scorePercentages.size() <= 50 &&
+             data.averageScore is number &&
+             data.masteryLevel in ["Novice", "Developing", "Intermediate", "Proficient", "Expert"] &&
+             data.lastEvaluated is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow get, list, create, update: if isAuthenticated();
+    }
+
+    match /questions {
+      match /{questionId} {
+        allow list, get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+        allow create: if isAuthenticated() && isValidQuestion(incoming());
+        allow update: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin()) && isValidQuestion(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+      }
+    }
+
+    match /answers/{answerId} {
+      allow get, list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidAnswer(incoming());
+      allow update: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin()) && isValidAnswer(incoming()) && incoming().userId == existing().userId;
+    }
+
+    match /exams/{examId} {
+      allow get, list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidExam(incoming());
+      allow update: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin()) && isValidExam(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    match /analytics/{userId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidAnalytics(incoming());
+      allow update: if (isOwner(userId) && isValidAnalytics(incoming()) && incoming().userId == existing().userId) || isAdmin();
+    }
+
+    match /chats/{chatId} {
+      allow get, list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidChat(incoming());
+      allow update: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin()) && isValidChat(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isAuthenticated() && (existing().userId == request.auth.uid || isAdmin());
+    }
+    
+    match /mastery/{userId} {
+      match /topics {
+        allow list: if isOwner(userId) || isAdmin();
+        match /{topicId} {
+          allow get, list: if isOwner(userId) || isAdmin();
+          allow create, update: if isOwner(userId) && isValidTopicMastery(incoming());
+          allow delete: if isOwner(userId) || isAdmin();
+        }
+      }
+    }
+
+    match /patterns/{patternId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /reference_questions/{refId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

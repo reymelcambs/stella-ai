@@ -1,0 +1,257 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information, role, and progress.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "User's email address." },
+        "role": { "type": "string", "enum": ["student", "teacher", "institution"], "description": "User's professional role." },
+        "subjects": { "type": "array", "items": { "type": "string" }, "description": "List of subjects the user is interested in." },
+        "coverage": { "type": "object", "description": "Map of subjects to completed topics." },
+        "level": { "type": "string", "enum": ["S4", "S5", "S6"], "description": "Current class level." },
+        "schoolName": { "type": "string", "description": "Name of the school or institution." },
+        "district": { "type": "string", "description": "Location district." },
+        "expectedGraduationYear": { "type": "number" },
+        "goals": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "onboarded": { "type": "boolean" }
+      },
+      "required": ["uid", "email", "role", "subjects", "level", "createdAt", "onboarded"]
+    },
+    "QuestionItem": {
+      "title": "Question Item",
+      "description": "Stores generated or uploaded practice questions with structured metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the question." },
+        "userId": { "type": "string", "description": "ID of the user who generated the question." },
+        "subject": { "type": "string", "description": "The subject of the question." },
+        "topics": { "type": "array", "items": { "type": "string" }, "description": "Topics covered by the question." },
+        "concept": { "type": "string", "description": "The core academic concept being tested." },
+        "patternUsed": { "type": "string", "description": "The pedagogical pattern used to generate the question." },
+        "stepsOfSolution": { "type": "array", "items": { "type": "string" }, "description": "Logical steps to solve the question." },
+        "questionType": { "type": "string", "description": "The category of question (e.g., Calculation, Explanation, Data Analysis)." },
+        "questionText": { "type": "string", "description": "The full text of the question." },
+        "scenarioData": { "type": "object", "description": "Optional data for the question scenario." },
+        "markingScheme": { "type": "string", "description": "Optional marking scheme or guide." },
+        "difficulty": { "type": "string", "enum": ["Standard", "Advanced", "Expert"], "description": "Difficulty level of the question." },
+        "examRealismScore": { "type": "number", "description": "AI-calculated score for how realistic the question is compared to UNEB standards." },
+        "createdAt": { "type": "number", "description": "Timestamp of question generation." },
+        "type": { "type": "string", "enum": ["generated", "uploaded"], "description": "Source of the question." }
+      },
+      "required": ["id", "userId", "subject", "topics", "questionText", "createdAt", "type"]
+    },
+    "QuestionPattern": {
+      "title": "Question Pattern",
+      "description": "Pedagogical templates for generating specific types of questions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "topics": { "type": "array", "items": { "type": "string" } },
+        "patternName": { "type": "string" },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "difficulty": { "type": "string" }
+      },
+      "required": ["id", "subject", "topics", "patternName", "steps"]
+    },
+    "ReferenceQuestion": {
+      "title": "Reference Question",
+      "description": "Real past paper questions used as few-shot examples for the AI.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "topics": { "type": "array", "items": { "type": "string" } },
+        "questionText": { "type": "string" },
+        "markingScheme": { "type": "string" },
+        "difficulty": { "type": "string" }
+      },
+      "required": ["id", "subject", "topics", "questionText"]
+    },
+    "AnswerRecord": {
+      "title": "Answer Record",
+      "description": "Stores student answers and AI feedback.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the student." },
+        "questionId": { "type": "string", "description": "ID of the question being answered." },
+        "answerText": { "type": "string", "description": "The student's response." },
+        "voiceTranscript": { "type": "string", "description": "Optional transcript if voice input was used." },
+        "feedback": { "type": "string", "description": "AI-generated feedback." },
+        "score": { "type": "number", "description": "Score out of 100." },
+        "isCorrect": { "type": "boolean", "description": "Whether the answer was considered correct." },
+        "timestamp": { "type": "number", "description": "Timestamp of the answer submission." }
+      },
+      "required": ["userId", "questionId", "answerText", "feedback", "score", "isCorrect", "timestamp"]
+    },
+    "AnalyticsRecord": {
+      "title": "Analytics Record",
+      "description": "Aggregated performance data for a user with granular mastery tracking.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user." },
+        "topicPerformance": { 
+          "type": "object", 
+          "description": "Performance stats per topic including mastery levels and trends." 
+        },
+        "conceptMastery": {
+          "type": "object",
+          "description": "Granular mastery scores for specific academic concepts."
+        },
+        "timeSpent": { "type": "number", "description": "Total time spent in minutes." },
+        "mistakesFrequency": { "type": "object", "description": "Frequency of common error types." },
+        "lastUpdated": { "type": "number", "description": "Timestamp of last aggregation." }
+      },
+      "required": ["userId", "topicPerformance", "conceptMastery", "timeSpent", "mistakesFrequency"]
+    },
+    "ExamRecord": {
+      "title": "Exam Record",
+      "description": "Stores completed exam papers and their full evaluation results.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "subject": { "type": "string" },
+        "topics": { "type": "array", "items": { "type": "string" } },
+        "questions": { "type": "array", "items": { "$ref": "QuestionItem" } },
+        "answers": { "type": "object", "description": "Map of question IDs to student answers." },
+        "results": { "type": "array", "items": { "type": "object" }, "description": "Detailed AI feedback for each question." },
+        "totalScore": { "type": "number" },
+        "startTime": { "type": "number" },
+        "endTime": { "type": "number" },
+        "duration": { "type": "number" }
+      },
+      "required": ["id", "userId", "subject", "topics", "questions", "answers", "results", "totalScore", "startTime", "endTime"]
+    },
+    "ChatSession": {
+      "title": "Chat Session",
+      "description": "Stores a saved chat conversation between the user and the AI.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "description": "AI-generated title for the chat." },
+        "messages": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "role": { "type": "string", "enum": ["user", "ai", "system"] },
+              "content": { "type": "string" },
+              "timestamp": { "type": "number" },
+              "attachments": { "type": "array", "items": { "type": "object" } },
+              "graph": { "type": "object" },
+              "image": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "title", "messages", "createdAt", "updatedAt"]
+    },
+    "LessonPlan": {
+      "title": "Lesson Plan",
+      "description": "Teacher's digital lesson preparation document.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "competency": { "type": "string" },
+        "level": { "type": "string" },
+        "learningOutcomes": { "type": "array", "items": { "type": "string" } },
+        "duration": { "type": "string" },
+        "introduction": { "type": "string" },
+        "development": { "type": "array", "items": { "type": "object" } },
+        "conclusion": { "type": "string" },
+        "assessmentTask": { "type": "object" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "teacherId", "subject", "topic", "createdAt"]
+    },
+    "SchemeOfWork": {
+      "title": "Scheme of Work",
+      "description": "Termly plan for a subject and level.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "subject": { "type": "string" },
+        "term": { "type": "number" },
+        "year": { "type": "number" },
+        "level": { "type": "string" },
+        "weeks": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "teacherId", "subject", "term", "year", "createdAt"]
+    },
+    "TopicMastery": {
+      "title": "Topic Mastery",
+      "description": "Detailed mastery tracking for a specific academic topic.",
+      "type": "object",
+      "properties": {
+        "topic": { "type": "string" },
+        "subject": { "type": "string" },
+        "scorePercentages": { "type": "array", "items": { "type": "number" } },
+        "averageScore": { "type": "number" },
+        "masteryLevel": { "type": "string", "enum": ["Novice", "Developing", "Intermediate", "Proficient", "Expert"] },
+        "lastEvaluated": { "type": "number" }
+      },
+      "required": ["topic", "subject", "scorePercentages", "averageScore", "masteryLevel", "lastEvaluated"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/questions/{questionId}": {
+      "schema": "QuestionItem",
+      "description": "Practice questions collection."
+    },
+    "/chats/{chatId}": {
+      "schema": "ChatSession",
+      "description": "Saved chat conversations."
+    },
+    "/exams/{examId}": {
+      "schema": "ExamRecord",
+      "description": "Full exam session records."
+    },
+    "/plans/{planId}": {
+      "schema": "LessonPlan",
+      "description": "Teacher lesson plans."
+    },
+    "/schemes/{schemeId}": {
+      "schema": "SchemeOfWork",
+      "description": "Teacher schemes of work."
+    },
+    "/answers/{answerId}": {
+      "schema": "AnswerRecord",
+      "description": "Student answers collection."
+    },
+    "/analytics/{userId}": {
+      "schema": "AnalyticsRecord",
+      "description": "User analytics documents."
+    },
+    "/mastery/{userId}/topics/{topicId}": {
+      "schema": "TopicMastery",
+      "description": "User topic mastery detailed records."
+    },
+    "/patterns/{patternId}": {
+      "schema": "QuestionPattern",
+      "description": "Global pedagogical patterns."
+    },
+    "/reference_questions/{refId}": {
+      "schema": "ReferenceQuestion",
+      "description": "Global reference questions."
+    }
+  }
+}

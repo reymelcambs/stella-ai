@@ -1,0 +1,5 @@
+{
+  "name": "Stellas",
+  "description": "A world-class AI tutor for A-Level students (CBC Mode) that generates real-world scenarios, guides learning, and simulates exam-standard challenges.",
+  "requestFramePermissions": ["microphone"]
+}

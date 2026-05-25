@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --slate-50: #f4f6f9;
+  --slate-100: #e8ecf2;
+  --slate-200: #dae1eb;
+  --slate-300: #9daec2;
+  --slate-400: #556c85; /* Highly vibrant and legible text slate */
+  --slate-500: #3c5169; /* Extra clear subtext slate */
+  --slate-600: #293d52; /* Crisp dark gray-slate */
+  --slate-700: #1a2938;
+  --slate-800: #111d29;
+  --slate-900: #0b131c;
+  --slate-950: #050a0f;
+
+  --canvas-color: #f4f6f9;
+  --ink-color: #0b131c;
+  --border-color: #dae1eb;
+}
+
+.dark, :root[class~="dark"] {
+  --slate-50: #090e14;
+  --slate-100: #0f1721;
+  --slate-200: #1a2533;
+  --slate-300: #314257;
+  --slate-400: #e2e8f0; /* Ultra glowing slate for headings & primary features */
+  --slate-500: #cbd5e1; /* Vivid bright subtext */
+  --slate-600: #a2b4cc; /* Visible accent text */
+  --slate-700: #8197b3;
+  --slate-800: #2d3e52;
+  --slate-900: #141f2c;
+  --slate-950: #090e14;
+
+  --canvas-color: #090e14;
+  --ink-color: #f8fafc;
+  --border-color: #1a2533;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Cormorant Garamond", serif;
+
+  /* Refined high-end palette - SLEEK VIBRANT COBALT/ROYAL BLUE */
+  --color-brand-50: #f0f7ff;
+  --color-brand-100: #e0f0ff;
+  --color-brand-200: #badeff;
+  --color-brand-300: #84cbff;
+  --color-brand-400: #43adff;
+  --color-brand-500: #158aff; /* Vibrant blue indicator */
+  --color-brand-600: #0066ff; /* High-end Core Cobalt Blue button background */
+  --color-brand-700: #0052cc;
+  --color-brand-800: #003e99;
+  --color-brand-900: #002b66;
+
+  /* Theme color overrides for Sleek Soft-Blue White light-mode and Premium Slate-Blue dark-mode */
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-900: var(--slate-900);
+  --color-slate-950: var(--slate-950);
+
+  --color-canvas: var(--canvas-color);
+  --color-ink: var(--ink-color);
+  
+  --color-accent-gold: #c5a059;
+  --color-accent-slate: #1a222d;
+
+  --color-border: var(--border-color);
+  --color-ring: #0066ff;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink antialiased;
+  }
+}
+
+/* Polished Markdown Styles */
+.markdown-body h1 { @apply text-4xl font-serif font-bold mb-8 mt-10 tracking-tight text-slate-900 leading-tight; }
+.markdown-body h2 { @apply text-2xl font-serif font-bold mb-6 mt-8 tracking-tight text-slate-800 leading-snug border-b border-slate-100 pb-2; }
+.markdown-body h3 { @apply text-xl font-display font-bold mb-4 mt-6 tracking-tight text-slate-800; }
+.markdown-body p { @apply mb-6 leading-relaxed text-slate-700 text-lg font-sans; }
+.markdown-body ul { @apply list-disc pl-8 mb-6 space-y-3 text-slate-700 text-lg font-sans; }
+.markdown-body ol { @apply list-decimal pl-8 mb-6 space-y-3 text-slate-700 text-lg font-sans; }
+.markdown-body li { @apply pl-2; }
+.markdown-body code { @apply bg-slate-100/80 px-2 py-0.5 rounded-md font-mono text-[0.85em] text-brand-700 font-medium; }
+.markdown-body pre { @apply bg-slate-900 text-slate-50 p-8 rounded-3xl mb-8 overflow-x-auto shadow-inner border border-slate-800 font-mono text-sm leading-relaxed; }
+.markdown-body blockquote { @apply border-l-4 border-brand-200 pl-8 italic mb-8 text-slate-500 bg-brand-50/20 py-6 rounded-r-3xl; }
+
+/* Dark mode specific markdown enhancements */
+.dark .markdown-body h1,
+.dark .markdown-body h2,
+.dark .markdown-body h3,
+.dark .markdown-body h4,
+.dark .markdown-body h5,
+.dark .markdown-body h6,
+.dark .markdown-body p, 
+.dark .markdown-body ul, 
+.dark .markdown-body ol, 
+.dark .markdown-body li,
+.dark .markdown-body strong,
+.dark .markdown-body em,
+.dark .markdown-body th, 
+.dark .markdown-body td,
+.markdown-dark h1,
+.markdown-dark h2,
+.markdown-dark h3,
+.markdown-dark h4,
+.markdown-dark h5,
+.markdown-dark h6,
+.markdown-dark p, 
+.markdown-dark ul, 
+.markdown-dark ol, 
+.markdown-dark li,
+.markdown-dark strong,
+.markdown-dark em,
+.markdown-dark th, 
+.markdown-dark td { 
+  color: #ffffff !important; 
+}
+.dark .markdown-body h1, .dark .markdown-body h2 { border-color: #334155 !important; }
+.dark .markdown-body code { @apply bg-slate-800/80 text-brand-300; }
+.dark .markdown-body blockquote { @apply border-brand-500 bg-slate-900/50 text-slate-200; }
+
+.markdown-body table { @apply w-full border-collapse mb-8 overflow-hidden rounded-2xl border border-slate-100 shadow-sm; }
+.markdown-body th, .markdown-body td { @apply border border-slate-100 p-5 text-left text-base; }
+.markdown-body th { @apply bg-slate-50/80 font-display font-bold text-slate-700 uppercase p-4 text-[0.7rem] tracking-widest; }
+.markdown-body tr:nth-child(even) { @apply bg-slate-50/30; }
+.markdown-body tr:hover { @apply bg-brand-50/10; }
+
+.dark .markdown-body table { @apply border-slate-800 bg-slate-900/40; }
+.dark .markdown-body th, .dark .markdown-body td { @apply border-slate-800 text-slate-50; }
+.dark .markdown-body th { @apply bg-slate-800/80 text-white; }
+.dark .markdown-body tr:nth-child(even) { @apply bg-slate-900/20; }
+.dark .markdown-body tr:hover { @apply bg-brand-500/10; }
+
+/* Custom components for mathematical display blocks */
+.katex-display {
+  @apply bg-white p-6 rounded-2xl border border-slate-100 shadow-sm my-8 transition-transform hover:scale-[1.01];
+}
+
+/* Glass effect overlays */
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar-h::-webkit-scrollbar {
+  height: 6px;
+}
+.custom-scrollbar-h::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.custom-scrollbar-h::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded-full hover:bg-slate-600;
+}
+
+/* Smooth custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full border-4 border-transparent bg-clip-padding hover:bg-slate-300 transition-colors;
+}
+
