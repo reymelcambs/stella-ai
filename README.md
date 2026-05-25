@@ -1,20 +1,58 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Stella AI Tutor
 
-# Run and deploy your AI Studio app
+Lightweight deployment guide and quick start for launch.
 
-This contains everything you need to run your app locally.
+## Overview
 
-View your app in AI Studio: https://ai.studio/apps/c3d7de72-f1df-4e35-bb0b-05efb6a56f3a
+This repository contains the Stella AI Tutor web service and API proxy. The app is ready for production deployment via Cloud Run or any container platform.
 
-## Run Locally
+## Quick start (local)
 
-**Prerequisites:**  Node.js
-
+Prerequisites: Node.js, npm
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+
+   npm install
+
+2. Create a local environment file from the template and fill in secrets locally:
+
+   cp .env.example .env
+
+3. Run in development mode:
+
+   npm run dev
+
+## Deploy (recommended)
+
+Use the provided Cloud Run deploy script to build, push, and deploy the container to GCP (project `cbc-ai-5c869`):
+
+```powershell
+.\cloud-run-deploy.ps1 -ResendApiKey "<secret>" -FirebaseApiKey "<secret>" -RedisUrl "redis://:PASSWORD@HOST:6379"
+```
+
+Alternatively build and push the Docker image and deploy manually to your cloud provider.
+
+## Important env vars
+
+Use `.env.example` as the template. Required values for production:
+
+- `RESEND_API_KEY` — email provider key (store in Secret Manager)
+- `FIREBASE_API_KEY` and other `FIREBASE_*` vars — Firebase web config
+- `REDIS_URL` — optional Redis connection for distributed rate limiting
+- `NODE_ENV` — set to `production` in deployment
+
+## Security notes
+
+- Never commit `.env` or real API keys to source control. Use Secret Manager or your platform's secret store.
+- Rotate any exposed keys immediately.
+- Health endpoints: `/_health` and `/_ready` are available for load balancers.
+
+## Operations
+
+- Use Cloud Armor / WAF + HTTPS Load Balancer for edge protection and IP/geo controls.
+- Monitor with Cloud Monitoring / Cloud Logging and alert on 5xx spikes, 429s, and sustained traffic surges.
+
+## Support
+
+For deployment help or questions, open an issue or contact the team.
+
