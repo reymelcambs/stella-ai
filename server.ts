@@ -4,6 +4,9 @@ import { createServer as createViteServer } from "vite";
 import { rateLimit } from "express-rate-limit";
 import admin from "firebase-admin";
 import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function startServer() {
   const app = express();
@@ -15,12 +18,14 @@ async function startServer() {
   // Initialize Firebase Admin with Application Default Credentials
   let adminInitialized = false;
   try {
-    let projectId = "cbc-ai-5c869";
+    const firebaseProjectId = process.env.FIREBASE_PROJECT_ID || "cbc-ai-5c869";
+
+    let projectId = firebaseProjectId;
     try {
       const configPath = path.join(process.cwd(), "firebase-applet-config.json");
       if (fs.existsSync(configPath)) {
         const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-        if (config.projectId) {
+        if (!process.env.FIREBASE_PROJECT_ID && config.projectId) {
           projectId = config.projectId;
         }
       }
@@ -29,7 +34,7 @@ async function startServer() {
     }
 
     admin.initializeApp({
-      projectId: projectId,
+      projectId,
     });
     adminInitialized = true;
     console.log(`[Firebase Admin] Initialized successfully for project: ${projectId}`);
@@ -107,7 +112,10 @@ async function startServer() {
         return res.status(400).json({ success: false, error: "Invalid subject format or length exceeded." });
       }
 
-      const apiKey = process.env.RESEND_API_KEY || "re_S2fpBCW9_3RnU3AKcBdseBRBqD8z5PrbM";
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ success: false, error: "Server configuration error: missing Resend API key." });
+      }
       
       // Primary sender using the verified custom domain
       const primarySender = "Stellas AI <tazondev@stellas-ai.com>";
@@ -188,17 +196,17 @@ async function startServer() {
       
       let resetLink = "";
       
-      // Resolve the Web Auth API Key dynamically from config or use preset fallback
-      let webApiKey = "AIzaSyDMf_s0aQVpTVjPfBEsWwOhXwtUjrC2yVE"; // default fallback
-      let projectId = "cbc-ai-5c869"; // default fallback
+      // Resolve the Firebase web API key and project ID from environment variables first
+      let webApiKey = process.env.FIREBASE_API_KEY || "";
+      let projectId = process.env.FIREBASE_PROJECT_ID || "cbc-ai-5c869";
       try {
         const configPath = path.join(process.cwd(), "firebase-applet-config.json");
         if (fs.existsSync(configPath)) {
           const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-          if (config.apiKey) {
+          if (!process.env.FIREBASE_API_KEY && config.apiKey) {
             webApiKey = config.apiKey;
           }
-          if (config.projectId) {
+          if (!process.env.FIREBASE_PROJECT_ID && config.projectId) {
             projectId = config.projectId;
           }
         }
@@ -265,7 +273,10 @@ async function startServer() {
       }
 
       // Craft custom email payload
-      const apiKey = process.env.RESEND_API_KEY || "re_S2fpBCW9_3RnU3AKcBdseBRBqD8z5PrbM";
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ success: false, error: "Server configuration error: missing Resend API key." });
+      }
       const fromSender = "Stellas AI <tazondev@stellas-ai.com>";
 
       const htmlBody = `
