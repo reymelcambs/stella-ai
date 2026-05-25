@@ -5,12 +5,14 @@ import { rateLimit } from "express-rate-limit";
 import admin from "firebase-admin";
 import fs from "fs";
 import dotenv from "dotenv";
+import Redis from "ioredis";
+import RedisStore from "rate-limit-redis";
 
 dotenv.config();
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Set trust proxy to 1 to correctly handle rate limiting headers behind Cloud Run/Nginx reverse proxy
   app.set("trust proxy", 1);
@@ -68,23 +70,53 @@ async function startServer() {
   });
 
   // Security Rate Limiter Configuration (Protects against Abuse and Spam)
-  const emailRateLimiter = rateLimit({
+  // Use a Redis-backed store when REDIS_URL is provided so rate limits work across multiple instances.
+  let emailRateLimiter: any;
+  let generalRateLimiter: any;
+
+  const emailLimiterOptions = {
     windowMs: 10 * 60 * 1000, // 10 minutes
     max: 10, // Max 10 emails per IP per window
     standardHeaders: true,
     legacyHeaders: false,
     validate: { trustProxy: false },
     message: { success: false, error: "Too many email requests sent. Please try again later." }
-  });
+  };
 
-  const generalRateLimiter = rateLimit({
+  const generalLimiterOptions = {
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 60, // Max 60 requests per minute
     standardHeaders: true,
     legacyHeaders: false,
     validate: { trustProxy: false },
     message: { success: false, error: "Too many requests. Rate limit exceeded." }
-  });
+  };
+
+  if (process.env.REDIS_URL) {
+    try {
+      const redisClient = new Redis(process.env.REDIS_URL);
+      const RedisStoreCtor: any = RedisStore;
+      const sharedStore = new RedisStoreCtor({ client: redisClient });
+
+      emailRateLimiter = rateLimit(Object.assign({}, emailLimiterOptions, { store: sharedStore }));
+      generalRateLimiter = rateLimit(Object.assign({}, generalLimiterOptions, { store: sharedStore }));
+
+      console.log('[RateLimit] Using Redis-backed store for rate limiting.');
+    } catch (err) {
+      console.warn('[RateLimit] Redis setup failed, falling back to memory store:', err);
+      emailRateLimiter = rateLimit(emailLimiterOptions);
+      generalRateLimiter = rateLimit(generalLimiterOptions);
+    }
+  } else {
+    // Fallback to in-memory store (single-instance only)
+    emailRateLimiter = rateLimit(emailLimiterOptions);
+    generalRateLimiter = rateLimit(generalLimiterOptions);
+    console.log('[RateLimit] Using in-memory rate limiter (single instance).');
+  }
+
+  // Lightweight health & readiness endpoints for load balancers and health checks
+  app.get('/_health', (req, res) => res.status(200).json({ status: 'ok' }));
+  app.get('/_ready', (req, res) => res.status(200).json({ ready: true }));
 
   // Apply general rate limiting across all API paths
   app.use("/api/", generalRateLimiter);
