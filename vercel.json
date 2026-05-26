@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://stellas-ai-872566992997.us-central1.run.app/api/:path*"
+    },
+    {
+      "source": "/_health",
+      "destination": "https://stellas-ai-872566992997.us-central1.run.app/_health"
+    },
+    {
+      "source": "/_ready",
+      "destination": "https://stellas-ai-872566992997.us-central1.run.app/_ready"
+    }
+  ]
+}
