@@ -1,7 +1,28 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 import {defineConfig, loadEnv} from 'vite';
+
+// Generate dummy firebase-applet-config.json if it is missing (e.g. in Vercel/CI builds)
+const dummyConfigPath = path.resolve(__dirname, 'firebase-applet-config.json');
+if (!fs.existsSync(dummyConfigPath)) {
+  try {
+    fs.writeFileSync(dummyConfigPath, JSON.stringify({
+      apiKey: '',
+      authDomain: '',
+      projectId: '',
+      appId: '',
+      storageBucket: '',
+      messagingSenderId: '',
+      measurementId: '',
+      firestoreDatabaseId: ''
+    }, null, 2));
+    console.log('[Vite Config] Generated dummy firebase-applet-config.json successfully.');
+  } catch (err) {
+    console.warn('[Vite Config] Failed to create dummy firebase-applet-config.json:', err);
+  }
+}
 
 const safeEnv = (value: string | undefined) => {
   const normalized = value?.trim();
