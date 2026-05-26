@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { rateLimit } from "express-rate-limit";
 import admin from "firebase-admin";
+import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import dotenv from "dotenv";
 import Redis from "ioredis";
@@ -304,6 +305,16 @@ async function startServer() {
         console.log(`[Express Proxy] Google Web API Key raw oobLink is restricted. Generated custom sandbox simulated reset link: ${resetLink}`);
       }
 
+      // Extract oobCode from resetLink when available so we can include the code in the email body
+      let oobCode: string | null = null;
+      try {
+        const parsed = new URL(resetLink);
+        oobCode = parsed.searchParams.get('oobCode');
+      } catch (e) {
+        // resetLink may be a simulated link without URL structure; ignore
+        oobCode = null;
+      }
+
       // Craft custom email payload
       const apiKey = process.env.RESEND_API_KEY;
       if (!apiKey) {
@@ -408,6 +419,115 @@ async function startServer() {
     } catch (error: any) {
       console.error("[Express Proxy] request-password-reset crash:", error);
       return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Endpoint to confirm password reset using Firebase oobCode + new password or directly via email using Admin SDK
+  app.post("/api/confirm-password-reset", async (req, res) => {
+    try {
+      const { oobCode, newPassword, email } = req.body;
+      if (!newPassword) {
+        return res.status(400).json({ success: false, error: "Missing newPassword" });
+      }
+
+      // If oobCode is present, use the standard REST API
+      if (oobCode) {
+        const webApiKey = process.env.FIREBASE_API_KEY;
+        if (!webApiKey) {
+          return res.status(500).json({ success: false, error: "Server configuration error: missing Firebase Web API key." });
+        }
+
+        const resetUrl = `https://identitytoolkit.googleapis.com/v1/accounts:resetPassword?key=${webApiKey}`;
+        const resetResponse = await fetch(resetUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oobCode, newPassword })
+        });
+
+        if (!resetResponse.ok) {
+          const errData = await resetResponse.json().catch(() => ({}));
+          return res.status(resetResponse.status).json({ success: false, error: errData });
+        }
+
+        return res.json({ success: true });
+      }
+
+      // If no oobCode but email is present, use Firebase Admin SDK to update the password directly
+      if (email && adminInitialized) {
+        try {
+          const user = await admin.auth().getUserByEmail(email);
+          await admin.auth().updateUser(user.uid, { password: newPassword });
+          console.log(`[Express Proxy] Password reset completed successfully via Admin SDK for user: ${email}`);
+          return res.json({ success: true });
+        } catch (authErr: any) {
+          console.error(`[Express Proxy] Admin SDK password reset failed:`, authErr.message);
+          return res.status(500).json({ success: false, error: authErr.message });
+        }
+      }
+
+      return res.status(400).json({ success: false, error: "Missing oobCode or email" });
+    } catch (err: any) {
+      console.error('[Express Proxy] confirm-password-reset failed:', err);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Secure backend proxy for Gemini AI requests.
+  app.post("/api/gemini", async (req, res) => {
+    try {
+      const { model, contents, config, ...rest } = req.body;
+
+      if (!model || typeof model !== "string") {
+        return res.status(400).json({ success: false, error: "Missing required parameter: model." });
+      }
+
+      if (!Array.isArray(contents)) {
+        return res.status(400).json({ success: false, error: "Missing or invalid required parameter: contents." });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ success: false, error: "Server configuration error: missing Gemini API key." });
+      }
+
+      // Map deprecated/unsupported/experimental models to stable/available production models
+      let targetModel = model;
+      if (model.startsWith("gemini-3.1-pro") || model.startsWith("gemini-3-pro")) {
+        targetModel = "gemini-2.5-pro";
+      } else if (model.startsWith("gemini-3.1-flash") || model.startsWith("gemini-3-flash")) {
+        targetModel = "gemini-2.5-flash";
+      } else if (model === "gemini-2.0-flash") {
+        targetModel = "gemini-2.5-flash";
+      } else if (model === "gemini-2.5-flash-image") {
+        targetModel = "gemini-2.5-flash";
+      } else if (model === "gemini-3.5-flash") {
+        targetModel = "gemini-2.5-flash";
+      }
+
+      const client = new GoogleGenAI({ apiKey });
+      const response = await client.models.generateContent({ model: targetModel, contents, config, ...rest });
+
+      // The GoogleGenAI SDK returns an ES6 class instance whose getter properties (like .text)
+      // are not serialized when using res.json() (which uses JSON.stringify).
+      // We explicitly extract .text and other potential properties to ensure the frontend receives them.
+      const jsonResponse: any = JSON.parse(JSON.stringify(response));
+      try {
+        if (response.text) {
+          jsonResponse.text = response.text;
+        }
+      } catch (e) {
+        console.warn("[Express Proxy] Could not extract response.text getter:", e);
+      }
+      try {
+        if (response.functionCalls) {
+          jsonResponse.functionCalls = response.functionCalls;
+        }
+      } catch (e) {}
+
+      return res.json(jsonResponse);
+    } catch (error: any) {
+      console.error("[Express Proxy] Gemini API proxy failed:", error);
+      return res.status(500).json({ success: false, error: error.message || "Unknown Gemini proxy error." });
     }
   });
 

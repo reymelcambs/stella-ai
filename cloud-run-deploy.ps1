@@ -1,5 +1,10 @@
 # Cloud Run deployment script for project cbc-ai-5c869
-# Run this after installing and authenticating Google Cloud SDK.
+# Run this from PowerShell (NOT cmd.exe) after installing and authenticating Google Cloud SDK.
+# Usage:
+#   .\cloud-run-deploy.ps1 `
+#     -ResendApiKey "re_xxxxx" `
+#     -FirebaseApiKey "AIzaXxxxx" `
+#     -GeminiApiKey "AIzaXxxxx"
 
 param(
   [Parameter(Mandatory=$true)]
@@ -7,6 +12,9 @@ param(
 
   [Parameter(Mandatory=$true)]
   [string]$FirebaseApiKey,
+
+  [Parameter(Mandatory=$true)]
+  [string]$GeminiApiKey,
 
   [Parameter(Mandatory=$false)]
   [string]$RedisUrl = "",
@@ -24,7 +32,6 @@ gcloud services enable run.googleapis.com `
   cloudbuild.googleapis.com `
   secretmanager.googleapis.com `
   iam.googleapis.com `
-  cloudarmor.googleapis.com `
   artifactregistry.googleapis.com
 
 # Create or update secret values
@@ -38,13 +45,18 @@ if (-not (gcloud secrets describe FIREBASE_API_KEY --project=cbc-ai-5c869 --quie
 }
 $FirebaseApiKey | gcloud secrets versions add FIREBASE_API_KEY --data-file=- --project=cbc-ai-5c869
 
+if (-not (gcloud secrets describe GEMINI_API_KEY --project=cbc-ai-5c869 --quiet 2>$null)) {
+  gcloud secrets create GEMINI_API_KEY --replication-policy="automatic" --project=cbc-ai-5c869
+}
+$GeminiApiKey | gcloud secrets versions add GEMINI_API_KEY --data-file=- --project=cbc-ai-5c869
+
 # Build and push container to Artifact Registry
 # You can change the repository name if desired.
 $ImageName = "gcr.io/cbc-ai-5c869/stellas-ai"
 gcloud builds submit --tag $ImageName --project=cbc-ai-5c869
 
 # Deploy to Cloud Run
-$SecretBindings = "RESEND_API_KEY=projects/cbc-ai-5c869/secrets/RESEND_API_KEY:latest,FIREBASE_API_KEY=projects/cbc-ai-5c869/secrets/FIREBASE_API_KEY:latest"
+$SecretBindings = "RESEND_API_KEY=RESEND_API_KEY:latest,FIREBASE_API_KEY=FIREBASE_API_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest"
 $EnvBindings = @("NODE_ENV=production")
 if ($RedisUrl -ne "") {
   $EnvBindings += "REDIS_URL=$RedisUrl"

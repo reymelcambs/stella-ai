@@ -1,20 +1,34 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, doc, getDocFromServer } from "firebase/firestore";
 import firebaseConfigJson from '../firebase-applet-config.json';
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || firebaseConfigJson.apiKey,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
-  projectId: process.env.FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
-  appId: process.env.FIREBASE_APP_ID || firebaseConfigJson.appId,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || firebaseConfigJson.storageBucket,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || firebaseConfigJson.messagingSenderId,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID || firebaseConfigJson.measurementId,
-  firestoreDatabaseId: process.env.FIRESTORE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId,
+const resolveEnv = (value: string | undefined, fallback?: string) => {
+  const normalized = value?.trim();
+  if (!normalized || normalized.startsWith('your_') || normalized === 'undefined' || normalized === 'null') {
+    return fallback;
+  }
+  return normalized;
 };
 
-const app = initializeApp(firebaseConfig);
+const firebaseConfig = {
+  apiKey: resolveEnv(process.env.FIREBASE_API_KEY, firebaseConfigJson.apiKey),
+  authDomain: resolveEnv(process.env.FIREBASE_AUTH_DOMAIN, firebaseConfigJson.authDomain),
+  projectId: resolveEnv(process.env.FIREBASE_PROJECT_ID, firebaseConfigJson.projectId),
+  appId: resolveEnv(process.env.FIREBASE_APP_ID, firebaseConfigJson.appId),
+  storageBucket: resolveEnv(process.env.FIREBASE_STORAGE_BUCKET, firebaseConfigJson.storageBucket),
+  messagingSenderId: resolveEnv(process.env.FIREBASE_MESSAGING_SENDER_ID, firebaseConfigJson.messagingSenderId),
+  measurementId: resolveEnv(process.env.FIREBASE_MEASUREMENT_ID, firebaseConfigJson.measurementId),
+  firestoreDatabaseId: resolveEnv(process.env.FIRESTORE_DATABASE_ID, firebaseConfigJson.firestoreDatabaseId),
+};
+
+let app;
+try {
+  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+} catch (error) {
+  app = getApp();
+}
+
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
   ignoreUndefinedProperties: true

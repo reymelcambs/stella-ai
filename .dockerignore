@@ -1,0 +1,16 @@
+# Prevent secrets and unnecessary files from being included in Docker images
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+node_modules
+dist
+build
+coverage
+*.log
+*.md
+!README.md
+android
+.DS_Store
+debug_lines.txt

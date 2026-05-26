@@ -36,7 +36,7 @@ import {
   limit,
   deleteDoc
 } from 'firebase/firestore';
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { Type, Modality } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkBreaks from 'remark-breaks';
@@ -527,8 +527,44 @@ export const AiThinkingBackground: React.FC<{ isDarkMode: boolean }> = ({ isDark
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />;
 };
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const callGeminiServer = async (payload: any) => {
+  const response = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data?.error || `Gemini proxy request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  // Reconstruct response.text if it is missing in the JSON payload but candidates are present
+  if (data && !data.text && data.candidates?.[0]?.content?.parts) {
+    try {
+      const parts = data.candidates[0].content.parts;
+      data.text = parts.map((p: any) => p.text || "").join("");
+    } catch (e) {
+      console.warn("Failed to reconstruct text from candidates:", e);
+    }
+  }
+
+  return data;
+};
+
+const ai: any = {
+  models: {
+    generateContent: callGeminiServer,
+  },
+  live: {
+    connect: async () => {
+      throw new Error('Gemini live sessions are disabled in secure proxy mode. Use server-side live support for live sessions.');
+    },
+  },
+};
 
 // Voice Helpers
 let currentAudioContext: AudioContext | null = null;
@@ -552,57 +588,61 @@ const speak = async (text: string, force = false) => {
   
   stopSpeaking();
 
-  try {
-    // Attempt Gemini TTS for high-quality voice
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-tts-preview",
-      contents: [{ parts: [{ text: `Say naturally and clearly: ${text.substring(0, 1000)}` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' }, 
+  if (ai) {
+    try {
+      // Attempt Gemini TTS for high-quality voice
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-tts-preview",
+        contents: [{ parts: [{ text: `Say naturally and clearly: ${text.substring(0, 1000)}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' }, 
+            },
           },
         },
-      },
-    });
+      });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (base64Audio) {
-      if (!currentAudioContext) {
-        currentAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        if (!currentAudioContext) {
+          currentAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        }
+        
+        const arrayBuffer = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0)).buffer;
+        const float32Array = new Float32Array(arrayBuffer.byteLength / 2);
+        const view = new DataView(arrayBuffer);
+        
+        // PCM16 to Float32
+        for (let i = 0; i < float32Array.length; i++) {
+          float32Array[i] = view.getInt16(i * 2, true) / 32768;
+        }
+        
+        const audioBuffer = currentAudioContext.createBuffer(1, float32Array.length, 24000);
+        audioBuffer.getChannelData(0).set(float32Array);
+        
+        currentSourceNode = currentAudioContext.createBufferSource();
+        currentSourceNode.buffer = audioBuffer;
+        currentSourceNode.connect(currentAudioContext.destination);
+        
+        // Handle the end of speech trigger if needed
+        currentSourceNode.onended = () => {
+          const event = new CustomEvent('speechEnded');
+          window.dispatchEvent(event);
+        };
+
+        const startEvent = new CustomEvent('speechStarted');
+        window.dispatchEvent(startEvent);
+
+        currentSourceNode.start();
+        return;
       }
-      
-      const arrayBuffer = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0)).buffer;
-      const float32Array = new Float32Array(arrayBuffer.byteLength / 2);
-      const view = new DataView(arrayBuffer);
-      
-      // PCM16 to Float32
-      for (let i = 0; i < float32Array.length; i++) {
-        float32Array[i] = view.getInt16(i * 2, true) / 32768;
-      }
-      
-      const audioBuffer = currentAudioContext.createBuffer(1, float32Array.length, 24000);
-      audioBuffer.getChannelData(0).set(float32Array);
-      
-      currentSourceNode = currentAudioContext.createBufferSource();
-      currentSourceNode.buffer = audioBuffer;
-      currentSourceNode.connect(currentAudioContext.destination);
-      
-      // Handle the end of speech trigger if needed
-      currentSourceNode.onended = () => {
-        const event = new CustomEvent('speechEnded');
-        window.dispatchEvent(event);
-      };
-
-      const startEvent = new CustomEvent('speechStarted');
-      window.dispatchEvent(startEvent);
-
-      currentSourceNode.start();
-      return;
+    } catch (error) {
+      console.warn("Gemini TTS failed, falling back to Browser TTS", error);
     }
-  } catch (error) {
-    console.warn("Gemini TTS failed, falling back to Browser TTS", error);
+  } else {
+    console.warn('Gemini API key missing; falling back to browser TTS. Set GEMINI_API_KEY to enable Gemini TTS.');
   }
 
   // Fallback to browser TTS
@@ -2359,6 +2399,10 @@ const callGeminiWithRetry = async (
   config: any = {},
   maxRetries = 5
 ) => {
+  if (!ai || !ai.models || typeof ai.models.generateContent !== 'function') {
+    throw new Error('Gemini AI client is unavailable. Make sure GEMINI_API_KEY is set correctly in .env and restart the app.');
+  }
+
   let lastError: any;
   
   for (let i = 0; i < maxRetries; i++) {
@@ -7531,7 +7575,7 @@ ${parsed.formulas}
                       </div>
                     ) : (
                       <form 
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
                           e.preventDefault();
                           if (!simulatedNewPassword.trim() || simulatedNewPassword.length < 6) {
                             setAuthError("Password must be at least 6 characters.");
@@ -7539,10 +7583,34 @@ ${parsed.formulas}
                           }
                           setLoginLoading(true);
                           setAuthError(null);
-                          setTimeout(() => {
+                          try {
+                            const response = await fetch('/api/confirm-password-reset', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                email: simulatedEmail,
+                                newPassword: simulatedNewPassword
+                              }),
+                            });
+                            if (response.ok) {
+                              const data = await response.json();
+                              if (data.success) {
+                                setSimulatedSuccess(true);
+                              } else {
+                                throw new Error(data.error || "Failed to reset password.");
+                              }
+                            } else {
+                              const errorData = await response.json().catch(() => ({}));
+                              throw new Error(errorData.error || "An error occurred during password reset.");
+                            }
+                          } catch (err: any) {
+                            console.error("Password reset failed:", err);
+                            setAuthError(err.message || "Could not update your password. Please try again.");
+                          } finally {
                             setLoginLoading(false);
-                            setSimulatedSuccess(true);
-                          }, 1000);
+                          }
                         }}
                         className="space-y-4"
                       >

@@ -1,16 +1,22 @@
-FROM node:18-alpine
+FROM node:20-slim
 
 WORKDIR /usr/src/app
 
-# Copy package manifests and install production deps
+# Copy package manifests and install ALL deps (devDependencies needed for build)
 COPY package.json package-lock.json* ./
-RUN npm ci --production || npm install --production
+RUN npm ci
 
 # Copy source
 COPY . .
 
-# Build frontend if present
-RUN npm run build --if-present || true
+# Generate dummy firebase-applet-config.json (since it is gitignored and not uploaded to builder)
+RUN echo '{"apiKey":"","authDomain":"","projectId":"","appId":"","storageBucket":"","messagingSenderId":"","measurementId":"","firestoreDatabaseId":""}' > firebase-applet-config.json
+
+# Build frontend + server bundle (will fail loudly if something is wrong)
+RUN npm run build
+
+# Remove devDependencies to shrink the final image
+RUN npm prune --production
 
 ENV PORT=8080
 EXPOSE 8080
