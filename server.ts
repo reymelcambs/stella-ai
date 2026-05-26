@@ -472,6 +472,50 @@ async function startServer() {
     }
   });
 
+  // Public endpoint to serve the Firebase client configuration dynamically.
+  // These credentials are client-safe and required by the Firebase client SDK.
+  app.get("/api/firebase-config", (req, res) => {
+    let apiKey = process.env.FIREBASE_API_KEY || "";
+    let projectId = process.env.FIREBASE_PROJECT_ID || "cbc-ai-5c869";
+    let authDomain = process.env.FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`;
+    let appId = process.env.FIREBASE_APP_ID || "";
+    let storageBucket = process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`;
+    let messagingSenderId = process.env.FIREBASE_MESSAGING_SENDER_ID || "";
+    let measurementId = process.env.FIREBASE_MEASUREMENT_ID || "";
+    let firestoreDatabaseId = process.env.FIRESTORE_DATABASE_ID || "";
+
+    try {
+      const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+        apiKey = apiKey || config.apiKey;
+        projectId = projectId || config.projectId;
+        authDomain = authDomain || config.authDomain;
+        appId = appId || config.appId;
+        storageBucket = storageBucket || config.storageBucket;
+        messagingSenderId = messagingSenderId || config.messagingSenderId;
+        measurementId = measurementId || config.measurementId;
+        firestoreDatabaseId = firestoreDatabaseId || config.firestoreDatabaseId;
+      }
+    } catch (err) {
+      console.warn("[Express] Failed to read firebase-applet-config.json for dynamic config endpoint", err);
+    }
+
+    return res.json({
+      success: true,
+      config: {
+        apiKey: (apiKey || "").trim(),
+        authDomain: (authDomain || "").trim(),
+        projectId: (projectId || "").trim(),
+        appId: (appId || "").trim(),
+        storageBucket: (storageBucket || "").trim(),
+        messagingSenderId: (messagingSenderId || "").trim(),
+        measurementId: (measurementId || "").trim(),
+        firestoreDatabaseId: (firestoreDatabaseId || "").trim()
+      }
+    });
+  });
+
   // Secure backend proxy for Gemini AI requests.
   app.post("/api/gemini", async (req, res) => {
     try {

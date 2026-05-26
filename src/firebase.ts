@@ -6,20 +6,23 @@ import firebaseConfigJson from '../firebase-applet-config.json';
 const resolveEnv = (value: string | undefined, fallback?: string) => {
   const normalized = value?.trim();
   if (!normalized || normalized.startsWith('your_') || normalized === 'undefined' || normalized === 'null') {
-    return fallback;
+    return fallback?.trim();
   }
   return normalized;
 };
 
+// Retrieve configuration dynamically loaded in index.html (useful for Vercel/CI builds where env vars are not available during frontend build)
+const windowConfig = (typeof window !== 'undefined' && (window as any).__FIREBASE_CONFIG__) || {};
+
 const firebaseConfig = {
-  apiKey: resolveEnv(process.env.FIREBASE_API_KEY, firebaseConfigJson.apiKey),
-  authDomain: resolveEnv(process.env.FIREBASE_AUTH_DOMAIN, firebaseConfigJson.authDomain),
-  projectId: resolveEnv(process.env.FIREBASE_PROJECT_ID, firebaseConfigJson.projectId),
-  appId: resolveEnv(process.env.FIREBASE_APP_ID, firebaseConfigJson.appId),
-  storageBucket: resolveEnv(process.env.FIREBASE_STORAGE_BUCKET, firebaseConfigJson.storageBucket),
-  messagingSenderId: resolveEnv(process.env.FIREBASE_MESSAGING_SENDER_ID, firebaseConfigJson.messagingSenderId),
-  measurementId: resolveEnv(process.env.FIREBASE_MEASUREMENT_ID, firebaseConfigJson.measurementId),
-  firestoreDatabaseId: resolveEnv(process.env.FIRESTORE_DATABASE_ID, firebaseConfigJson.firestoreDatabaseId),
+  apiKey: resolveEnv(process.env.FIREBASE_API_KEY, windowConfig.apiKey || firebaseConfigJson.apiKey),
+  authDomain: resolveEnv(process.env.FIREBASE_AUTH_DOMAIN, windowConfig.authDomain || firebaseConfigJson.authDomain),
+  projectId: resolveEnv(process.env.FIREBASE_PROJECT_ID, windowConfig.projectId || firebaseConfigJson.projectId),
+  appId: resolveEnv(process.env.FIREBASE_APP_ID, windowConfig.appId || firebaseConfigJson.appId),
+  storageBucket: resolveEnv(process.env.FIREBASE_STORAGE_BUCKET, windowConfig.storageBucket || firebaseConfigJson.storageBucket),
+  messagingSenderId: resolveEnv(process.env.FIREBASE_MESSAGING_SENDER_ID, windowConfig.messagingSenderId || firebaseConfigJson.messagingSenderId),
+  measurementId: resolveEnv(process.env.FIREBASE_MEASUREMENT_ID, windowConfig.measurementId || firebaseConfigJson.measurementId),
+  firestoreDatabaseId: resolveEnv(process.env.FIRESTORE_DATABASE_ID, windowConfig.firestoreDatabaseId || firebaseConfigJson.firestoreDatabaseId),
 };
 
 let app;
