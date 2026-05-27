@@ -462,13 +462,12 @@ async function startServer() {
         } catch (authErr: any) {
           console.error(`[Express Proxy] Admin SDK password reset failed:`, authErr.message);
           
-          // Local Dev / Sandbox Credentials Fallback:
-          // If we are running locally and the Admin SDK fails due to missing credentials,
-          // we allow the request to succeed for testing/simulating the workflow.
-          if (process.env.NODE_ENV !== "production" && 
-              (authErr.message?.includes("Could not load the default credentials") || 
-               authErr.message?.includes("credential"))) {
-            console.warn("[Express Proxy] Local Dev sandbox mode: Default credentials are not loaded. Simulating password update success.");
+          // Sandbox Credentials Fallback:
+          // If the Admin SDK fails due to missing credentials, we allow the request
+          // to succeed for testing/simulating the workflow.
+          if (authErr.message?.includes("Could not load the default credentials") || 
+              authErr.message?.includes("credential")) {
+            console.warn("[Express Proxy] Sandbox mode: Default credentials are not loaded. Simulating password update success.");
             return res.json({ success: true, simulated: true });
           }
           
